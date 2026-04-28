@@ -46,7 +46,7 @@ class PROCESSENTRY32W(ctypes.Structure):
     cntUsage: int
     th32ProcessID: int
     th32DefaultHeapID: int
-    th32ModuleId: int
+    th32ModuleID: int
     cntThreads: int
     th32ParentProcessID: int
     pcPriClassBase: int
@@ -58,7 +58,7 @@ class PROCESSENTRY32W(ctypes.Structure):
         ("cntUsage", wintypes.DWORD),
         ("th32ProcessID", wintypes.DWORD),
         ("th32DefaultHeapID", ctypes.POINTER(ctypes.c_ulong)),
-        ("th32ModuleId", wintypes.DWORD),
+        ("th32ModuleID", wintypes.DWORD),
         ("cntThreads", wintypes.DWORD),
         ("th32ParentProcessID", wintypes.DWORD),
         ("pcPriClassBase", ctypes.c_long),
@@ -129,7 +129,7 @@ def get_pids_by_name(exe_name: str) -> set:
 def get_main_window_by_pids(pids: set) -> wintypes.HWND | None:
     ret = None
 
-    def callback(hwnd: wintypes.HWND, lpram):
+    def callback(hwnd: wintypes.HWND, lparam):
         nonlocal ret
         if not user32.IsWindowVisible(hwnd):
             return True
@@ -204,3 +204,8 @@ def get_process_monitor_info(exe_name: str) -> MonitorInfo | None:
     actual_height = mon_info.rcMonitor.bottom - mon_info.rcMonitor.top
 
     return MonitorInfo(monitor_name=mon_info.szDevice, exe_name=exe_name, actual_width=actual_width, actual_height=actual_height, scale_percent=scale, scale_factor=scale/100)
+
+# usage
+# set_dpi_awareness()
+# get_process_monitor_info(exe_name)
+
