@@ -4,8 +4,8 @@ import psutil
 from typing import TypedDict
 
 user32 = ctypes.windll.user32
-kernel32 = ctypes.windll.kernel32
 shcore = ctypes.windll.shcore
+kernel32 = ctypes.windll.kernel32
 
 TH32CS_SNAPPROCESS = 0x00000002
 INVALID_HANDLE_VALUE = ctypes.c_void_p(-1).value
@@ -25,7 +25,7 @@ class RECT(ctypes.Structure):
     ]
 
 
-class MONITORINFOEXW(ctypes.Structure):
+class MONITORINFOEX(ctypes.Structure):
     cbSize: int
     rcMonitor: RECT
     rcWork: RECT
@@ -44,11 +44,11 @@ class MONITORINFOEXW(ctypes.Structure):
 class PROCESSENTRY32W(ctypes.Structure):
     dwSize: int
     cntUsage: int
-    th32ProcessId: int
-    th32DefaultHeapId: int
+    th32ProcessID: int
+    th32DefaultHeapID: int
     th32ModuleId: int
     cntThreads: int
-    th32ParentProcessId: int
+    th32ParentProcessID: int
     pcPriClassBase: int
     dwFlags: int
     szExeFile: str
@@ -56,11 +56,11 @@ class PROCESSENTRY32W(ctypes.Structure):
     _fields_ = [
         ("dwSize", wintypes.DWORD),
         ("cntUsage", wintypes.DWORD),
-        ("th32ProcessId", wintypes.DWORD),
-        ("th32DefaultHeapId", ctypes.POINTER(ctypes.c_ulong)),
+        ("th32ProcessID", wintypes.DWORD),
+        ("th32DefaultHeapID", ctypes.POINTER(ctypes.c_ulong)),
         ("th32ModuleId", wintypes.DWORD),
         ("cntThreads", wintypes.DWORD),
-        ("th32ParentProcessId", wintypes.DWORD),
+        ("th32ParentProcessID", wintypes.DWORD),
         ("pcPriClassBase", ctypes.c_long),
         ("dwFlags", wintypes.DWORD),
         ("szExeFile", wintypes.WCHAR * 260)
@@ -79,8 +79,7 @@ class MonitorInfo(TypedDict):
 def set_dpi_awareness():
     try:
         DPI_AWARENESS_CONTEXT_PER_MONITOR_AWARE_V2 = ctypes.c_void_p(-4)
-        user32.SetProcessDpiAwarenessContext(
-            DPI_AWARENESS_CONTEXT_PER_MONITOR_AWARE_V2)
+        user32.SetProcessDpiAwarenessContext(DPI_AWARENESS_CONTEXT_PER_MONITOR_AWARE_V2)
         return
     except Exception:
         pass
@@ -92,7 +91,7 @@ def set_dpi_awareness():
         pass
 
     try:
-        user32.SetProcessDpiAware()
+        user32.SetProcessDPIAware()
         return
     except Exception:
         raise RuntimeError("无法获取屏幕DPI")
@@ -121,7 +120,7 @@ def get_pids_by_name(exe_name: str) -> set:
     ok = kernel32.Process32FirstW(hSnap, ctypes.byref(pe))
     while ok:
         if pe.szExeFile.lower() == exe_name:
-            pids.append(pe.th32ProcessId)
+            pids.append(pe.th32ProcessID)
         ok = kernel32.Process32NextW(hSnap, ctypes.byref(pe))
     kernel32.CloseHandle(hSnap)
     return set(pids)
@@ -129,14 +128,10 @@ def get_pids_by_name(exe_name: str) -> set:
 
 def get_main_window_by_pids(pids: set) -> wintypes.HWND | None:
     ret = None
-    EnumWindowsProc = ctypes.WINFUNCTYPE(
-        wintypes.BOOL, wintypes.HWND, wintypes.LPARAM)
 
     def callback(hwnd: wintypes.HWND, lpram):
         nonlocal ret
         if not user32.IsWindowVisible(hwnd):
-            return True
-        if user32.GetWindow(hwnd, 4):
             return True
 
         pid = wintypes.DWORD()
@@ -144,26 +139,28 @@ def get_main_window_by_pids(pids: set) -> wintypes.HWND | None:
         if pid.value in pids:
             ret = hwnd
             return False
+        return True
 
+    EnumWindowsProc = ctypes.WINFUNCTYPE(wintypes.BOOL, wintypes.HWND, wintypes.LPARAM)
     user32.EnumWindows(EnumWindowsProc(callback), 0)
     return ret
 
 
-def get_monitor_info_from_window(hwnd: wintypes.HWND) -> MONITORINFOEXW | None:
+def get_monitor_info_from_window(hwnd: wintypes.HWND) -> MONITORINFOEX | None:
     MONITOR_DEFAULTTONEAREST = 2
     hmon = user32.MonitorFromWindow(hwnd, MONITOR_DEFAULTTONEAREST)
     if not hmon:
         return None
 
-    mon_info = MONITORINFOEXW()
-    mon_info.cbSize = ctypes.sizeof(MONITORINFOEXW)
+    mon_info = MONITORINFOEX()
+    mon_info.cbSize = ctypes.sizeof(MONITORINFOEX)
     if not user32.GetMonitorInfoW(hmon, ctypes.byref(mon_info)):
         return None
 
     return mon_info
 
 
-def get_scale_factor(hmon: MONITORINFOEXW) -> int | None:
+def get_scale_factor(hmon: MONITORINFOEX) -> int | None:
     try:
         scale = wintypes.DWORD()
         result = shcore.GetScaleFactorForMonitor(hmon, ctypes.byref(scale))
