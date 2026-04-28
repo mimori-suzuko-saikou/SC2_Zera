@@ -146,12 +146,7 @@ def get_main_window_by_pids(pids: set) -> wintypes.HWND | None:
     return ret
 
 
-def get_monitor_info_from_window(hwnd: wintypes.HWND) -> MONITORINFOEX | None:
-    MONITOR_DEFAULTTONEAREST = 2
-    hmon = user32.MonitorFromWindow(hwnd, MONITOR_DEFAULTTONEAREST)
-    if not hmon:
-        return None
-
+def get_monitor_info_from_window(hmon: wintypes.HMONITOR) -> MONITORINFOEX | None:
     mon_info = MONITORINFOEX()
     mon_info.cbSize = ctypes.sizeof(MONITORINFOEX)
     if not user32.GetMonitorInfoW(hmon, ctypes.byref(mon_info)):
@@ -160,7 +155,7 @@ def get_monitor_info_from_window(hwnd: wintypes.HWND) -> MONITORINFOEX | None:
     return mon_info
 
 
-def get_scale_factor(hmon: MONITORINFOEX) -> int | None:
+def get_scale_factor(hmon: wintypes.HMONITOR) -> int | None:
     try:
         scale = wintypes.DWORD()
         result = shcore.GetScaleFactorForMonitor(hmon, ctypes.byref(scale))
@@ -191,12 +186,17 @@ def get_process_monitor_info(exe_name: str) -> MonitorInfo | None:
     hwnd = get_main_window_by_pids(pids)
     if not hwnd:
         return None
+    
+    MONITOR_DEFAULTTONEAREST = 2
+    hmon = user32.MonitorFromWindow(hwnd, MONITOR_DEFAULTTONEAREST)
+    if not hmon:
+        return None
 
-    mon_info = get_monitor_info_from_window(hwnd)
+    mon_info = get_monitor_info_from_window(hmon)
     if not mon_info:
         return None
 
-    scale = get_scale_factor(mon_info)
+    scale = get_scale_factor(hmon)
     if not scale:
         return None
 
@@ -206,6 +206,8 @@ def get_process_monitor_info(exe_name: str) -> MonitorInfo | None:
     return MonitorInfo(monitor_name=mon_info.szDevice, exe_name=exe_name, actual_width=actual_width, actual_height=actual_height, scale_percent=scale, scale_factor=scale/100)
 
 # usage
-# set_dpi_awareness()
-# get_process_monitor_info(exe_name)
+set_dpi_awareness()
+aa = get_process_monitor_info("chrome.exe")
+if aa:
+    print(aa["actual_height"], aa["actual_width"], aa["scale_factor"])
 

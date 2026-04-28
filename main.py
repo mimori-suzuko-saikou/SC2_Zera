@@ -7,7 +7,8 @@ from PyQt6.QtGui import QPixmap, QPainter, QFont
 import sys
 import os
 import backend
-from windows_api import user32, set_dpi_awareness
+from backend import base_address
+from windows_api import set_dpi_awareness
 
 # ---------- 资源路径处理（打包 exe 用）----------
 
@@ -27,53 +28,21 @@ except Exception as e:
     print(e)
 
 # ---------- 获取屏幕物理分辨率和缩放因子 ----------
-app = QApplication(sys.argv)
-screen = app.primaryScreen()
-dpr = screen.devicePixelRatio()
-logical_size = screen.size()
-physical_width = round(logical_size.width() * dpr)
-physical_height = round(logical_size.height() * dpr)
-print(f"检测到物理分辨率: {physical_width}x{physical_height}, 缩放因子: {dpr}")
+# app = QApplication(sys.argv)
+# screen = app.primaryScreen()
+# dpr = screen.devicePixelRatio()
+# logical_size = screen.size()
+# physical_width = round(logical_size.width() * dpr)
+# physical_height = round(logical_size.height() * dpr)
+# print(f"检测到物理分辨率: {physical_width}x{physical_height}, 缩放因子: {dpr}")
 
-# ---------- 预设参数表（物理像素，在100%缩放下测量）----------
-PRESET_PARAMS = {
-    (3840, 2160): (524, 442, 57, 2097),
-    (2560, 1440): (355, 347, 36, 1423),
-    (2560, 1600): (395, 383, 39, 1581),
-    (2048, 1536): (380, 368, 37, 1518),
-    (1920, 1440): (355, 348, 36, 1425),
-    (1920, 1200): (295, 288, 30, 1186),
-    (1920, 1080): (267, 259, 26, 1068),
-    (1680, 1050): (259, 252, 26, 1038),
-    (1600, 1200): (295, 289, 30, 1187),
-    (1600, 1024): (253, 245, 25, 1013),
-    (1600, 900):  (224, 217, 22, 891),
-    (1366, 768):  (190, 185, 19, 759),
-}
-
-# 根据物理分辨率选择预设
-key = (physical_width, physical_height)
-if key in PRESET_PARAMS:
-    PHYS_WINDOWS_SIZE = PRESET_PARAMS[key]
-    print(f"使用预设参数: {PHYS_WINDOWS_SIZE}")
-else:
-    print(f"错误：未找到分辨率 {physical_width}x{physical_height} 的预设参数。")
-    print("请手动测量并添加到 PRESET_PARAMS 字典中。")
-    sys.exit(1)
-
-# 转换为当前缩放下的逻辑参数（程序内部使用）
-windows_size_crood = tuple(round(v / dpr) for v in PHYS_WINDOWS_SIZE)
-
-# ---------- 以下为原界面代码（基址已更新）----------
-# 第一个参数是 y，第二个参数是 x
-base_address = [(0x04482638, [0x0, 0x0, 0x44]), (0x04482638, [0x0, 0x0, 0x68])]
 
 
 class KeySignaler(QObject):
-    map_name = pyqtSignal(list)
+    map_name = pyqtSignal(str)
 
 
-class ImageGridWidget(QWidget):
+class GamePlugin(QWidget):
     # 类属性：16张图片的文字描述和URL
     MapList = [
         ("虚空撕裂", "https://huiji-public.huijistatic.com/starcraft/uploads/6/68/Ui_loading_coop_gameplay_char2.png"),
@@ -117,7 +86,7 @@ class ImageGridWidget(QWidget):
         layout.addWidget(self.title_label)
 
         # 界面布局
-        grid = QGridLayout(self)
+        grid = QGridLayout()
         self.labels = []
         self.cell_size = (150, 85)
 
@@ -170,7 +139,7 @@ class ImageGridWidget(QWidget):
             # 在图片底层绘制白色文字描述
             painter = QPainter(pixmap)
             painter.setPen(Qt.GlobalColor.white)
-            painter.setFont(QFont("Microsoft YaHei", 50, QFont.Weight.Bold))
+            painter.setFont(QFont("Microsoft YaHei", 20, QFont.Weight.Bold))
             desc = self.MapList[index][0]
             painter.drawText(pixmap.rect(), Qt.AlignmentFlag.AlignBottom | Qt.AlignmentFlag.AlignHCenter, desc)
             painter.end()
@@ -230,13 +199,12 @@ class ImageGridWidget(QWidget):
         clicked_cell.setStyleSheet(
             "background-color: #222; border: 2px solid #00ff00; border-radius: 5px; color: #00ff00;")
 
-        self.signaler.map_name.emit([self.MapList[idx][0], base_address, windows_size_crood])
+        self.signaler.map_name.emit(self.MapList[idx][0])
         hex_iterable_x = map(hex, base_address[1][1])
         hex_iterable_y = map(hex, base_address[0][1])
         self.update_title(f"当前选中：地图 {self.MapList[idx][0]} "
                           f"\n x基址:{hex(base_address[1][0])} 偏移:{list(hex_iterable_x)} "
-                          f"\n y基址:{base_address[0][0]} 偏移:{list(hex_iterable_y)}"
-                          f"\n 当前屏幕小地图设定大小 {windows_size_crood}"
+                          f"\n y基址:{hex(base_address[0][0])} 偏移:{list(hex_iterable_y)}"
                           f"\n 神器x坐标:{self.Point.crood_x} "
                           f"\n 神器y坐标:{self.Point.crood_y}")
         print(f"当前选中：地图 {self.MapList[idx][0]}")
@@ -247,6 +215,6 @@ class ImageGridWidget(QWidget):
 
 if __name__ == "__main__":
     app = QApplication(sys.argv)
-    widget = ImageGridWidget()
+    widget = GamePlugin()
     widget.show()
     sys.exit(app.exec())
