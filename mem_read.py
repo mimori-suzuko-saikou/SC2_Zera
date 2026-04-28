@@ -13,7 +13,7 @@ def get_pointer_address(pm, base, offsets):
     return addr + offsets[-1]
 
 #process_name 游戏进程 ,base_static_offset 起始地址,多层偏移
-def base_address(base_static_offset,pointer_offsets,process_name= "SC2_x64.exe"):
+def read_base_address(base_static_offset,pointer_offsets,process_name= "SC2_x64.exe"):
     try:
         # 1. 初始化进程
         pm = pymem.Pymem(process_name)

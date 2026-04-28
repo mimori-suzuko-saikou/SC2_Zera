@@ -2,8 +2,9 @@ import sys
 from PyQt6.QtWidgets import QApplication, QWidget
 from PyQt6.QtCore import Qt, QTimer
 from PyQt6.QtGui import QPainter, QColor, QBrush
-import demo13
-import demo16
+
+from mem_read import read_base_address
+from map_crood import map_crood_execute
 
 map_size_list = {
     "虚空撕裂": [(208,200), (175,160), (16,12)],
@@ -104,8 +105,8 @@ class PixelPoint(QWidget):
     def update_position(self):
         if self.map_size and self.base_address and self.windows_size_crood:
             try:
-                y_val = demo13.base_address(self.base_address[0][0], self.base_address[0][1])
-                x_val = demo13.base_address(self.base_address[1][0], self.base_address[1][1])
+                y_val = read_base_address(self.base_address[0][0], self.base_address[0][1])
+                x_val = read_base_address(self.base_address[1][0], self.base_address[1][1])
                 if y_val is None or x_val is None:
                     print("内存读取失败，跳过本次更新")
                     return
@@ -113,7 +114,7 @@ class PixelPoint(QWidget):
                 self.crood_x = x_val
                 print(f"内存读取: x={self.crood_x}, y={self.crood_y}")
 
-                newcoord = demo16.map_crood_execute(
+                newcoord = map_crood_execute(
                     self.map_size[0],
                     self.map_size[1],
                     self.windows_size_crood[:2],
@@ -136,11 +137,11 @@ class PixelPoint(QWidget):
         else:
             pass
 
-def run_app():
-    app = QApplication(sys.argv)
-    point = PixelPoint(25, 807)
-    point.show()
-    sys.exit(app.exec())
+# def run_app():
+#     app = QApplication(sys.argv)
+#     point = PixelPoint(25, 807)
+#     point.show()
+#     sys.exit(app.exec())
 
-if __name__ == "__main__":
-    run_app()
+# if __name__ == "__main__":
+#     run_app()
