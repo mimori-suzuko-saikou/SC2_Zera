@@ -186,7 +186,7 @@ def get_process_monitor_info(exe_name: str) -> MonitorInfo | None:
     hwnd = get_main_window_by_pids(pids)
     if not hwnd:
         return None
-    
+
     MONITOR_DEFAULTTONEAREST = 2
     hmon = user32.MonitorFromWindow(hwnd, MONITOR_DEFAULTTONEAREST)
     if not hmon:
@@ -205,9 +205,9 @@ def get_process_monitor_info(exe_name: str) -> MonitorInfo | None:
 
     return MonitorInfo(monitor_name=mon_info.szDevice, exe_name=exe_name, actual_width=actual_width, actual_height=actual_height, scale_percent=scale, scale_factor=scale/100)
 
-# usage
-set_dpi_awareness()
-aa = get_process_monitor_info("chrome.exe")
-if aa:
-    print(aa["actual_height"], aa["actual_width"], aa["scale_factor"])
 
+# usage
+# set_dpi_awareness()
+# aa = get_process_monitor_info("chrome.exe")
+# if aa:
+#     print(aa["actual_height"], aa["actual_width"], aa["scale_factor"])

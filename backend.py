@@ -11,6 +11,7 @@ import pymem
 
 base_address = [(0x04482638, [0x0, 0x0, 0x44]), (0x04482638, [0x0, 0x0, 0x68])]
 
+
 def get_pointer_address(pm, base, offsets):
     # 初始地址 = 模块基址 + 第一个偏移量
     addr = pm.read_longlong(base)
@@ -22,8 +23,10 @@ def get_pointer_address(pm, base, offsets):
     # 返回最终的目标地址
     return addr + offsets[-1]
 
-#process_name 游戏进程 ,base_static_offset 起始地址,多层偏移
-def read_base_address(base_static_offset,pointer_offsets,process_name= "SC2_x64.exe"):
+# process_name 游戏进程 ,base_static_offset 起始地址,多层偏移
+
+
+def read_base_address(base_static_offset, pointer_offsets, process_name="SC2_x64.exe"):
     try:
         # 1. 初始化进程
         pm = pymem.Pymem(process_name)
@@ -85,7 +88,7 @@ def get_fitted_stretched_rect(ref_orig, boundary, target_orig):
     return {
         "final_dimensions": (round(final_w, 2), round(final_h, 2)),
         "limiting_factor": "Width" if (boundary[0] / target_deformed_w) < (
-                    boundary[1] / target_deformed_h) else "Height",
+            boundary[1] / target_deformed_h) else "Height",
         "total_area_ratio": round(final_area_ratio, 4)
     }
 
@@ -144,22 +147,23 @@ def map_crood_execute(map_size, camera_size, layout_size, coord, margin_size):
 
 # ============== 计算拉伸 ===============
 
+
 map_size_list = {
-    "虚空撕裂": [(208,200), (175,160), (16,12)],
-    "克哈裂痕": [(216,216), (196,173), (10,13)],
-    "熔火危机": [(200,200), (180,172), (10,8)],
-    "聚铁成兵": [(216,200), (178,176), (20,6)],
-    "营救矿工": [(200,184), (180,156), (10,8)],
-    "黑暗杀星": [(216,192), (181,164), (18,9)],
-    "死亡摇篮": [(256,256), (218,193), (20,30)],
-    "天界封锁": [(208,216), (172,180), (18,16)],
-    "升格之链": [(216,184), (196,164), (10,8)],
-    "虚空降临": [(152,192), (132,164), (10,8)],
-    "机会渺茫": [(168,184), (148,156), (10,8)],
-    "净网行动": [(208,192), (192,164), (10,8)],
-    "亡者之夜": [(192,192), (160,160), (16,8)],
-    "往日神庙": [(192,200), (176,172), (8,8)],
-    "湮灭快车": [(224,160), (192,144), (16,8)]
+    "虚空撕裂": [(208, 200), (175, 160), (16, 12)],
+    "克哈裂痕": [(216, 216), (196, 173), (10, 13)],
+    "熔火危机": [(200, 200), (180, 172), (10, 8)],
+    "聚铁成兵": [(216, 200), (178, 176), (20, 6)],
+    "营救矿工": [(200, 184), (180, 156), (10, 8)],
+    "黑暗杀星": [(216, 192), (181, 164), (18, 9)],
+    "死亡摇篮": [(256, 256), (218, 193), (20, 30)],
+    "天界封锁": [(208, 216), (172, 180), (18, 16)],
+    "升格之链": [(216, 184), (196, 164), (10, 8)],
+    "虚空降临": [(152, 192), (132, 164), (10, 8)],
+    "机会渺茫": [(168, 184), (148, 156), (10, 8)],
+    "净网行动": [(208, 192), (192, 164), (10, 8)],
+    "亡者之夜": [(192, 192), (160, 160), (16, 8)],
+    "往日神庙": [(192, 200), (176, 172), (8, 8)],
+    "湮灭快车": [(224, 160), (192, 144), (16, 8)]
 }
 
 # ---------- 预设参数表（物理像素，在100%缩放下测量）----------
@@ -177,6 +181,7 @@ PRESET_PARAMS = {
     (1600, 900):  (224, 217, 22, 891),
     (1366, 768):  (190, 185, 19, 759),
 }
+
 
 class PixelPoint(QWidget):
     def __init__(self, x=25, y=807):
@@ -234,7 +239,7 @@ class PixelPoint(QWidget):
             painter.setBrush(QBrush(self.color_tr))
             painter.drawRect(half_w, 0, w - half_w, half_h)        # 右上
             painter.setBrush(QBrush(self.color_br))
-            painter.drawRect(half_w, half_h, w - half_w, h - half_h) # 右下
+            painter.drawRect(half_w, half_h, w - half_w, h - half_h)  # 右下
             painter.setBrush(QBrush(self.color_bl))
             painter.drawRect(0, half_h, half_w, h - half_h)        # 左下
         else:
@@ -252,7 +257,7 @@ class PixelPoint(QWidget):
                 PHYS_WINDOWS_SIZE = PRESET_PARAMS[key]
                 print(f"使用预设参数: {PHYS_WINDOWS_SIZE}")
             else:
-                print(f"错误：未找到分辨率 {self.mon_info["actual_width"]} x {self.mon_info["actual_height"]} 的预设参数。")
+                print(f"错误：未找到分辨率 {self.mon_info['actual_width']} x {self.mon_info['actual_height']} 的预设参数。")
                 print("请手动测量并添加到 PRESET_PARAMS 字典中。")
                 sys.exit(1)
 
@@ -266,9 +271,9 @@ class PixelPoint(QWidget):
         self.update_size()
 
     def update_size(self):
-        if not self.mon_info:
+        if not self.mon_info or not self.windows_size_crood:
             return
-        
+
         if self.selected_map != self.current_map:
             self.current_map = self.selected_map
         # 根据小地图宽度自动调整方块大小
@@ -287,7 +292,7 @@ class PixelPoint(QWidget):
         if not self.mon_info:
             self.get_mon_info()
 
-        if self.map_size and self.mon_info:
+        if self.map_size and self.mon_info and self.windows_size_crood:
             try:
                 self.update_size()
                 y_val = read_base_address(self.base_address[0][0], self.base_address[0][1])

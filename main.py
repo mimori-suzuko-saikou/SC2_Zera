@@ -37,7 +37,6 @@ except Exception as e:
 # print(f"检测到物理分辨率: {physical_width}x{physical_height}, 缩放因子: {dpr}")
 
 
-
 class KeySignaler(QObject):
     map_name = pyqtSignal(str)
 
